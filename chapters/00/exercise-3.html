@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.8.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.8.0/addons/p5.sound.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta charset="utf-8" />
+    <title>Chapter 0 - exercise 3 - random walk, mouse-aware</title>
+  </head>
+  <body>
+    <main></main>
+
+    <script>
+      class Walker {
+        constructor() {
+          this.x = width / 2;
+          this.y = height / 2;
+        }
+
+        show() {
+          stroke(0);
+          point(this.x, this.y);
+        }
+
+        step() {
+          const rand = random();
+          if (rand < 0.2) {
+            this.stepTowardsMouse();
+          } else {
+            this.stepNormal();
+          }
+        }
+
+        stepTowardsMouse() {
+          const xStep = random();
+          const yStep = random()
+
+          if (this.x < mouseX) {
+            this.x += xStep;
+          } else {
+            this.x -= xStep;
+          }
+
+          if (this.y < mouseY) {
+            this.y += yStep;
+          } else {
+            this.y -= yStep;
+          }
+        }
+
+        stepNormal() {
+          const xStep = random(-1, 1);
+          const yStep = random(-1, 1);
+          this.x += xStep;
+          this.y += yStep;
+        }
+      }
+
+      let walker;
+
+      // p5.js executes setup() once when the sketch starts
+      function setup() {
+        createCanvas(640, 240);
+        walker = new Walker();
+        background(255);
+      }
+
+      // p5.js calls draw() every frame
+      function draw() {
+        walker.step();
+        walker.show();
+      }
+    </script>
+
+  </body>
+</html>
