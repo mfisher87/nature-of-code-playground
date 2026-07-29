@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.8.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.8.0/addons/p5.sound.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta charset="utf-8" />
+    <title>Chapter 1 - exercise 8 - gravitational attraction</title>
+  </head>
+  <body>
+    <main></main>
+
+    <script>
+      class Mover {
+        constructor() {
+          this.position = createVector(width / 2, height / 2);
+          this.velocity = createVector(0, 0);
+          this.acceleration = createVector(0, 0);
+          this.topSpeed = 15;
+          this.topAccel = 0.3;
+          this.frictionCoeff = 0.8;
+
+          this.frictionZoneSize = 200;
+
+          this.frictionZoneBounds = [
+            width / 2 - this.frictionZoneSize / 2,   // minx
+            height / 2 - this.frictionZoneSize / 2,  // miny
+            width / 2 + this.frictionZoneSize / 2,   // maxX
+            height / 2 + this.frictionZoneSize / 2,  // maxY
+          ];
+        }
+
+        inFrictionZone() {
+          return (
+            this.position.x > this.frictionZoneBounds[0] &&
+            this.position.y > this.frictionZoneBounds[1] &&
+            this.position.x < this.frictionZoneBounds[2] &&
+            this.position.y < this.frictionZoneBounds[3]
+          );
+        }
+
+        update() {
+          let mouse = createVector(mouseX, mouseY);
+          let direction = p5.Vector.sub(mouse, this.position);
+
+          this.acceleration = direction.copy().setMag(map(
+            direction.mag(),
+            0,
+            max(width, height),
+            this.topAccel,
+            0,
+            true,
+          ));
+
+          if (this.inFrictionZone()) {
+            this.acceleration.mult(1 - this.frictionCoeff);
+          }
+
+          this.velocity.add(this.acceleration);
+          this.velocity.limit(this.topSpeed);
+          this.position.add(this.velocity);
+        }
+
+        show() {
+          colorMode(RGB);
+          fill(180);
+          rectMode(CORNERS)
+          rect(...this.frictionZoneBounds);
+
+          stroke(0);
+          strokeWeight(2);
+          colorMode(HSL);
+          fill(map(this.acceleration.mag(), 0, this.topAccel, 0, 150), 50, 50);
+          circle(this.position.x, this.position.y, 48);
+
+          fill(0);
+          strokeWeight(1);
+          text(`Acceleration: ${this.acceleration.mag()}.`, 10, 10);
+        }
+      }
+
+      let mover;
+
+      function setup() {
+        createCanvas(1280, 480);
+        mover = new Mover();
+      }
+
+      function draw() {
+        background(255);
+
+        mover.update();
+        mover.show();
+      }
+    </script>
+
+  </body>
+</html>
