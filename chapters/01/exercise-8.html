@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.8.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.8.0/addons/p5.sound.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta charset="utf-8" />
+    <title>Chapter 1 - exercise 8 - gravitational attraction</title>
+  </head>
+  <body>
+    <main></main>
+
+    <script>
+      class Mover {
+        constructor() {
+          this.position = createVector(width / 2, height / 2);
+          this.velocity = createVector(0, 0);
+          this.acceleration = createVector(0, 0);
+          this.topspeed = 5;
+        }
+
+        update() {
+
+          let mouse = createVector(mouseX, mouseY);
+          let dir = p5.Vector.sub(mouse, this.position);
+
+          dir.setMag(0.2);
+
+          this.acceleration = dir;
+
+          this.velocity.add(this.acceleration);
+          this.velocity.limit(this.topspeed);
+          this.position.add(this.velocity);
+
+        }
+
+        show() {
+          stroke(0);
+          strokeWeight(2);
+          fill(127);
+          circle(this.position.x, this.position.y, 48);
+        }
+      }
+
+      let mover;
+
+      function setup() {
+        createCanvas(1280, 480);
+        mover = new Mover();
+      }
+
+      function draw() {
+        background(255);
+
+        mover.update();
+        mover.show();
+      }
+    </script>
+
+  </body>
+</html>
