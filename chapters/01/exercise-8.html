@@ -16,7 +16,7 @@
           this.position = createVector(width / 2, height / 2);
           this.velocity = createVector(0, 0);
           this.acceleration = createVector(0, 0);
-          this.topSpeed = 5;
+          this.topSpeed = 25;
           this.topAccel = 0.3;
 
           colorMode(HSL);
@@ -37,7 +37,6 @@
           this.velocity.add(this.acceleration);
           this.velocity.limit(this.topSpeed);
           this.position.add(this.velocity);
-
         }
 
         show() {
