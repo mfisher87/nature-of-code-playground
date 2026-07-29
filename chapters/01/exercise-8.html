@@ -16,14 +16,13 @@
           this.position = createVector(width / 2, height / 2);
           this.velocity = createVector(0, 0);
           this.acceleration = createVector(0, 0);
-          this.topspeed = 5;
-          this.topaccel = 0.3;
+          this.topSpeed = 5;
+          this.topAccel = 0.3;
 
           colorMode(HSL);
         }
 
         update() {
-
           let mouse = createVector(mouseX, mouseY);
           let direction = p5.Vector.sub(mouse, this.position); 
 
@@ -31,12 +30,12 @@
             direction.mag(),
             0,
             max(width, height),
-            this.topaccel,
+            this.topAccel,
             0,
           ));
 
           this.velocity.add(this.acceleration);
-          this.velocity.limit(this.topspeed);
+          this.velocity.limit(this.topSpeed);
           this.position.add(this.velocity);
 
         }
@@ -48,7 +47,7 @@
 
           stroke(0);
           strokeWeight(2);
-          fill(map(this.acceleration.mag(), 0, this.topaccel, 0, 150), 50, 50);
+          fill(map(this.acceleration.mag(), 0, this.topAccel, 0, 150), 50, 50);
           circle(this.position.x, this.position.y, 48);
         }
       }
