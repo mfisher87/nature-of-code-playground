@@ -24,7 +24,7 @@
 
         update() {
           let mouse = createVector(mouseX, mouseY);
-          let direction = p5.Vector.sub(mouse, this.position); 
+          let direction = p5.Vector.sub(mouse, this.position);
 
           this.acceleration = direction.copy().setMag(map(
             direction.mag(),
