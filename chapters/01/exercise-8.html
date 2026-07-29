@@ -26,13 +26,13 @@
           let mouse = createVector(mouseX, mouseY);
           let direction = p5.Vector.sub(mouse, this.position); 
 
-          // BUG: Can escape the map range of (this.topAccel, 0) ¯\_(ツ)_/¯
           this.acceleration = direction.copy().setMag(map(
             direction.mag(),
             0,
             max(width, height),
             this.topAccel,
             0,
+            true,
           ));
 
           this.velocity.add(this.acceleration);
