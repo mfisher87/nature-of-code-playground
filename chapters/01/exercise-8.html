@@ -18,8 +18,25 @@
           this.acceleration = createVector(0, 0);
           this.topSpeed = 15;
           this.topAccel = 0.3;
+          this.frictionCoeff = 0.8;
 
-          colorMode(HSL);
+          this.frictionZoneSize = 200;
+
+          this.frictionZoneBounds = [
+            width / 2 - this.frictionZoneSize / 2,   // minx
+            height / 2 - this.frictionZoneSize / 2,  // miny
+            width / 2 + this.frictionZoneSize / 2,   // maxX
+            height / 2 + this.frictionZoneSize / 2,  // maxY
+          ];
+        }
+
+        inFrictionZone() {
+          return (
+            this.position.x > this.frictionZoneBounds[0] &&
+            this.position.y > this.frictionZoneBounds[1] &&
+            this.position.x < this.frictionZoneBounds[2] &&
+            this.position.y < this.frictionZoneBounds[3]
+          );
         }
 
         update() {
@@ -35,20 +52,30 @@
             true,
           ));
 
+          if (this.inFrictionZone()) {
+            this.acceleration.mult(1 - this.frictionCoeff);
+          }
+
           this.velocity.add(this.acceleration);
           this.velocity.limit(this.topSpeed);
           this.position.add(this.velocity);
         }
 
         show() {
-          fill(0);
-          strokeWeight(1);
-          text(`Acceleration: ${this.acceleration.mag()}.`, 10, 10);
+          colorMode(RGB);
+          fill(180);
+          rectMode(CORNERS)
+          rect(...this.frictionZoneBounds);
 
           stroke(0);
           strokeWeight(2);
+          colorMode(HSL);
           fill(map(this.acceleration.mag(), 0, this.topAccel, 0, 150), 50, 50);
           circle(this.position.x, this.position.y, 48);
+
+          fill(0);
+          strokeWeight(1);
+          text(`Acceleration: ${this.acceleration.mag()}.`, 10, 10);
         }
       }
 
