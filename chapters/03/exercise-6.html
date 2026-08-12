@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.8.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.8.0/addons/p5.sound.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta charset="utf-8" />
+    <title>Chapter 3 - exercise 6 - "Asteroids"</title>
+  </head>
+  <body>
+    <main></main>
+
+    <script>
+      let ship;
+
+      class Spaceship {
+        constructor() {
+          this.position = createVector(width / 2, height / 2);
+          this.velocity = createVector(0, 0);
+          this.acceleration = createVector(0, 0);
+
+          // Arbitrary damping to slow down ship
+          this.damping = 0.995;
+          this.topspeed = 6;
+
+          this.heading = 0;
+
+          // Size
+          this.r = 16;
+
+          this.thrusting = false;
+        }
+
+        update() {
+          this.velocity.add(this.acceleration);
+          this.velocity.mult(this.damping);
+          this.velocity.limit(this.topspeed);
+          this.position.add(this.velocity);
+          this.acceleration.mult(0);
+        }
+
+        // Newton's law: F = M * A
+        applyForce(force) {
+          let f = force.copy();
+          //f.div(mass); // ignoring mass right now
+          this.acceleration.add(f);
+        }
+
+        turn(angle) {
+          this.heading += angle;
+        }
+
+        thrust() {
+          // Offset the angle since we drew the ship vertically
+          let angle = this.heading - PI / 2;
+          let force = p5.Vector.fromAngle(angle);
+          force.mult(0.1);
+          this.applyForce(force);
+          this.thrusting = true;
+        }
+
+        wrapEdges() {
+          let buffer = this.r * 2;
+          if (this.position.x > width + buffer) this.position.x = -buffer;
+          else if (this.position.x < -buffer) this.position.x = width + buffer;
+          if (this.position.y > height + buffer) this.position.y = -buffer;
+          else if (this.position.y < -buffer) this.position.y = height + buffer;
+        }
+
+        show() {
+          stroke(0);
+          strokeWeight(2);
+          push();
+          translate(this.position.x, this.position.y + this.r);
+          rotate(this.heading);
+          fill(175);
+          if (this.thrusting) fill(255, 0, 0);
+          // Booster rockets
+          rectMode(CENTER);
+          rect(-this.r / 2, this.r, this.r / 3, this.r / 2);
+          rect(this.r / 2, this.r, this.r / 3, this.r / 2);
+          fill(175);
+          // A triangle
+          beginShape();
+          vertex(-this.r, this.r);
+          vertex(0, -this.r);
+          vertex(this.r, this.r);
+          endShape(CLOSE);
+          rectMode(CENTER);
+          pop();
+
+          this.thrusting = false;
+        }
+      }
+
+      function setup() {
+        createCanvas(640, 240);
+        ship = new Spaceship();
+      }
+
+      function draw() {
+        background(255);
+
+        ship.update();
+        ship.wrapEdges();
+        ship.show();
+
+        fill(0);
+        text("left right arrows to turn, z to thrust",10,height-5);
+
+        // Turn or thrust the ship depending on what key is pressed
+        if (keyIsDown(LEFT_ARROW)) {
+          ship.turn(-0.03);
+        } else if (keyIsDown(RIGHT_ARROW)) {
+          ship.turn(0.03);
+        } else if (keyIsDown(90)) {
+          ship.thrust();
+        }
+      }
+
+    </script>
+
+  </body>
+</html>
