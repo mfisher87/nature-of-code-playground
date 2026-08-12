@@ -50,11 +50,15 @@
           this.heading += angle;
         }
 
-        thrust() {
+        thrust(backwards = false) {
           // Offset the angle since we drew the ship vertically
           let angle = this.heading - PI / 2;
           let force = p5.Vector.fromAngle(angle);
-          force.mult(0.1);
+          if (backwards) {
+            force.mult(-0.1);
+          } else {
+            force.mult(0.1);
+          }
           this.applyForce(force);
           this.thrusting = true;
         }
@@ -94,7 +98,7 @@
       }
 
       function setup() {
-        createCanvas(640, 240);
+        createCanvas(1280, 480);
         ship = new Spaceship();
       }
 
@@ -115,6 +119,8 @@
         }
         if (keyIsDown(UP_ARROW)) {
           ship.thrust();
+        } else if (keyIsDown(DOWN_ARROW)) {
+          ship.thrust(true);
         }
       }
 
