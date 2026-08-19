@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.8.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.8.0/addons/p5.sound.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta charset="utf-8" />
+    <title>Chapter 3 - exercise 6 - "Asteroids"</title>
+  </head>
+  <body>
+    <main></main>
+
+    <script>
+      // Bob object, just like our regular Mover (location, velocity, acceleration, mass)
+      class Bob {
+        constructor(x, y) {
+          this.position = createVector(x, y);
+          this.velocity = createVector(0, 0);
+          this.acceleration = createVector(0, 0);
+          this.mass = 24;
+          // Arbitrary damping to simulate friction / drag
+          this.damping = 0.98;
+          
+          // For user interaction
+          this.dragOffset = createVector(0, 0);
+          this.dragging = false;
+          this.throwing = false;
+        }
+
+        // Standard Euler integration
+        update() {
+          this.velocity.add(this.acceleration);
+          this.velocity.mult(this.damping);
+          this.position.add(this.velocity);
+          this.acceleration.mult(0);
+        }
+
+        // Newton's law: F = M * A
+        applyForce(force) {
+          let f = force.copy();
+          f.div(this.mass);
+          this.acceleration.add(f);
+        }
+
+        // Draw the bob
+        show() {
+          stroke(0);
+          strokeWeight(2);
+          fill(127);
+          if (this.dragging) {
+            fill(200);
+          }
+          circle(this.position.x, this.position.y, this.mass * 2);
+        }
+
+        handleClick(mx, my) {
+          let d = dist(mx, my, this.position.x, this.position.y);
+          if (d < this.mass) {  // This is weird -- why using "mass"? Weird rendering thing, see it rendering the size of the bob as 2*mass above
+            this.dragging = true;
+            this.dragOffset.x = this.position.x - mx;
+            this.dragOffset.y = this.position.y - my;
+          }
+        }
+
+        stopDragging() {
+          this.dragging = false;
+          this.throwing = true;
+        }
+
+        handleDrag(mx, my) {
+          if (this.dragging) {
+            this.position.x = mx + this.dragOffset.x;
+            this.position.y = my + this.dragOffset.y;
+          }
+        }
+
+        handleThrow(springThrowCallback) {
+          if (this.throwing) {
+            springThrowCallback();
+          }
+        }
+      }
+
+
+      class Spring {
+        constructor(x, y, length, bob) {
+          this.anchor = createVector(x, y);
+          this.restLength = length;
+          this.k = 0.2;
+          this.bob = bob;
+          this.throwStart = undefined;
+        }
+
+        update() {
+          if (this.bob === null) {
+            return;
+          }
+          this.propagateForce();
+        }
+
+        // Calculate and apply spring force
+        propagateForce() {
+          // Vector pointing from anchor to bob location
+          let force = p5.Vector.sub(this.bob.position, this.anchor);
+          // What is distance
+          let currentLength = force.mag();
+          // Stretch is difference between current distance and rest length
+          let stretch = currentLength - this.restLength;
+
+          //{!2 .bold} Direction and magnitude together!
+          force.setMag(-1 * this.k * stretch);
+
+          //{!1} Call applyForce() right here!
+          this.bob.applyForce(force);
+        }
+
+        constrainLength(bob, minlen, maxlen) {
+          //{!1} Vector pointing from Bob to Anchor
+          let direction = p5.Vector.sub(this.bob.position, this.anchor);
+          let length = direction.mag();
+
+          //{!1} Is it too short?
+          if (length < minlen) {
+            direction.setMag(minlen);
+            //{!1} Keep position within constraint.
+            this.bob.position = p5.Vector.add(this.anchor, direction);
+            this.bob.velocity.mult(0);
+            //{!1} Is it too long?
+          } else if (length > maxlen) {
+            direction.setMag(maxlen);
+            //{!1} Keep position within constraint.
+            this.bob.position = p5.Vector.add(this.anchor, direction);
+            this.bob.velocity.mult(0);
+          }
+        }
+
+        handleThrow() {
+          if (this.throwStart === undefined) {
+            this.throwStart = this.bob.position.mag();
+          }
+          if ( /* bob magnitude crosses restLength to the opposite side of throwStart */ ) {
+            this.bob = null;
+          }
+        }
+
+        //{!5} Draw the anchor.
+        show() {
+          fill(127);
+          circle(this.anchor.x, this.anchor.y, 10);
+        }
+
+        //{!4} Draw the spring connection between Bob position and anchor.
+        showLine(bob) {
+          stroke(0);
+          line(this.bob.position.x, this.bob.position.y, this.anchor.x, this.anchor.y);
+        }
+      }
+
+      let bob;
+      let spring;
+
+      function setup() {
+        createCanvas(640, 240);
+        // Create objects at starting position
+        // Note third argument in Spring constructor is "rest length"
+        bob = new Bob(width / 2, 100);
+        spring = new Spring(width / 2, 10, 100, bob);
+      }
+
+      function draw() {
+        background(255);
+
+        // Apply a gravity force to the bob
+        let gravity = createVector(0, 2);
+        bob.applyForce(gravity);
+
+        spring.update();
+
+        bob.update();
+        bob.handleDrag(mouseX, mouseY);
+        bob.handleThrow(spring.handleThrow);
+
+        // Constrain spring distance between min and max
+        spring.constrainLength(bob, 30, 200);
+
+        // Draw everything
+        spring.showLine(bob); // Draw a line between spring and bob
+        bob.show();
+        spring.show();
+      }
+
+      function mousePressed() {
+        bob.handleClick(mouseX, mouseY);
+      }
+
+      function mouseReleased() {
+        bob.stopDragging();
+      }
+    </script>
+
+  </body>
+</html>
