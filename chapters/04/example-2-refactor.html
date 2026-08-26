@@ -37,24 +37,24 @@ Modified to refactor stuff I didn't like and add abstractions I thought would be
     <main></main>
 
     <script>
-			class ParticleSystem {
-				constructor(x, y, lifespanPredicate, agingRatePredicate) {
-					this.origin = createVector(x, y);
-					this.particles = [];
+      class ParticleSystem {
+        constructor(x, y, lifespanPredicate, agingRatePredicate) {
+          this.origin = createVector(x, y);
+          this.particles = [];
           this.lifespanPredicate = lifespanPredicate;
           this.agingRatePredicate = agingRatePredicate;
-				}
+        }
 
-				addParticle() {
-					this.particles.push(new Particle(
+        addParticle() {
+          this.particles.push(new Particle(
             this.origin.x,
             this.origin.y,
             this.lifespanPredicate(),
             this.agingRatePredicate(),
-					));
-				}
+          ));
+        }
 
-				step() {
+        step() {
           this.addParticle();
           this.particles = this.particles.filter((particle) => {
             if (particle.isDead()) {
@@ -64,48 +64,47 @@ Modified to refactor stuff I didn't like and add abstractions I thought would be
               return true;
             }
           });
-				}
-			}
+        }
+      }
 
-			class Particle {
-				constructor(x, y, lifespan, agingRate) {
-					this.position = createVector(x, y);
-					this.acceleration = createVector(0, 0);
-					this.velocity = createVector(random(-1, 1), random(-1, 0));
-					this.lifespan = lifespan;
+      class Particle {
+        constructor(x, y, lifespan, agingRate) {
+          this.position = createVector(x, y);
+          this.acceleration = createVector(0, 0);
+          this.velocity = createVector(random(-1, 1), random(-1, 0));
+          this.lifespan = lifespan;
           this.agingRate = agingRate;
-				}
+        }
 
-				isDead() {
-					return this.lifespan < 0.0;
-				}
+        isDead() {
+          return this.lifespan < 0.0;
+        }
 
-				step() {
-					let gravity = createVector(0, 0.05);
-					this.applyForce(gravity);
-					this.update();
-					this.show();
-				}
+        step() {
+          let gravity = createVector(0, 0.05);
+          this.applyForce(gravity);
+          this.update();
+          this.show();
+        }
 
-				applyForce(force) {
-					this.acceleration.add(force);
-				}
+        applyForce(force) {
+          this.acceleration.add(force);
+        }
 
-				update() {
-					this.velocity.add(this.acceleration);
-					this.position.add(this.velocity);
-					this.lifespan -= this.agingRate;
-					this.acceleration.mult(0);
-				}
+        update() {
+          this.velocity.add(this.acceleration);
+          this.position.add(this.velocity);
+          this.lifespan -= this.agingRate;
+          this.acceleration.mult(0);
+        }
 
-				show() {
-					stroke(0, this.lifespan);
-					strokeWeight(2);
-					fill(127, this.lifespan);
-					circle(this.position.x, this.position.y, 8);
-				}
-			}
-
+        show() {
+          stroke(0, this.lifespan);
+          strokeWeight(2);
+          fill(127, this.lifespan);
+          circle(this.position.x, this.position.y, 8);
+        }
+      }
 
       let particleSystem;
 
