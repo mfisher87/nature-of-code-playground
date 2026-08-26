@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.8.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.8.0/addons/p5.sound.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta charset="utf-8" />
+    <title>Chapter 1 - exercise 8 - gravitational attraction</title>
+  </head>
+  <body>
+    <main></main>
+
+    <script>
+      class Mover {
+        constructor(x, y, vx, vy, m) {
+          this.pos = createVector(x, y);
+          this.vel = createVector(vx, vy);
+          this.acc = createVector(0, 0);
+          this.mass = m;
+          this.r = sqrt(this.mass) * 1;
+
+          this.isDragging = false;
+          this.isHovering = false;
+
+          console.log(this.pos);
+        }
+
+        applyForce(force) {
+          let f = p5.Vector.div(force, this.mass);
+          this.acc.add(f);
+        }
+
+        attract(mover) {
+          let force = p5.Vector.sub(this.pos, mover.pos);
+          let distanceSq = constrain(force.magSq(), 100, 1000);
+          let G = 1;
+          let strength = (G * (this.mass * mover.mass)) / distanceSq;
+          force.setMag(strength);
+          mover.applyForce(force);
+        }
+
+        update() {
+          this.vel.add(this.acc);
+          this.pos.add(this.vel);
+          this.acc.set(0, 0);
+        }
+
+        show() {
+          stroke(0);
+          strokeWeight(2);
+          if (this.isHovering) {
+            fill(50);
+          } else if (this.isDragging) {
+            fill(100);
+          } else {
+            fill(175, 200);
+          }
+          ellipse(this.pos.x, this.pos.y, this.r * 2);
+        }
+
+        isMouseIntersect(mx, my) {
+          let d = dist(mx, my, this.pos.x, this.pos.y);
+          if (this.mass > 100) {
+            console.log(`dist: ${d}`);
+            console.log(`pos: ${this.pos.x}, ${this.pos.y}`);
+            console.log(`mouse: ${mx}, ${my}`);
+          }
+          return d < this.r ? true : false;
+        }
+
+        handleClick(mx, my) {
+          if (this.isMouseIntersect(mx, my)) {
+            this.isDragging = true;
+            this.dragOffset.x = this.pos.x - mx;
+            this.dragOffset.y = this.pos.y - my;
+          }
+        }
+
+        handleHover(mx, my) {
+          if (this.isMouseIntersect(mx, my)) {
+            this.isHovering = true;
+          } else {
+            this.isHovering = false;
+          }
+        }
+
+        handleDrag(mx, my) {
+          if (this.isDragging) {
+            this.pos.x = mx + this.dragOffset.x;
+            this.pos.y = my + this.dragOffset.y;
+          }
+        }
+
+        stopDragging() {
+          this.isDragging = false;
+        }
+      }
+
+      const numSatellites = 100;
+      const satellites = [];
+      let star;
+
+      function setup() {
+        createCanvas(1280, 480);
+        for (let i = 0; i < numSatellites; i++) {
+          let pos = p5.Vector.random2D();
+          let vel = pos.copy();
+          vel.setMag(random(10, 15));
+          pos.setMag(random(100, 150));
+          vel.rotate(PI / 2);
+          let m = random(10, 15);
+          satellites[i] = new Mover(pos.x, pos.y, vel.x, vel.y, m);
+        }
+
+        star = new Mover(0, 0, 0, 0, 500);
+        background(255);
+      }
+
+      function draw() {
+        background(255, 50);
+        translate(width / 2, height / 2);
+
+        for (let satellite of satellites) {
+          star.attract(satellite);
+          for (let otherSatellite of satellites) {
+            if (satellite !== otherSatellite) {
+              satellite.attract(otherSatellite);
+              // stroke(255);
+              //line(satellite.pos.x, satellite.pos.y, otherSatellite.pos.x, otherSatellite.pos.y);
+            }
+          }
+        }
+
+        for (let satellite of satellites) {
+          satellite.update();
+          satellite.show();
+        }
+        star.show();
+      }
+
+      function mouseMoved() {
+        star.handleHover(mouseX, mouseY);
+        for (let satellite of satellites) {
+          satellite.handleHover(mouseX, mouseY);
+        }
+      }
+      
+      function mousePressed() {
+      }
+
+      function mouseDragged() {
+      }
+
+      function mouseRelease() {
+      }
+
+    </script>
+
+  </body>
+</html>
