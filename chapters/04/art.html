@@ -37,6 +37,33 @@ Modified to refactor stuff I didn't like and add abstractions I thought would be
     <main></main>
 
     <script>
+      const G = 1.0;
+
+      class Attractor {
+        constructor() {
+          this.position = createVector(width / 2, height / 2);
+          this.mass = 20;
+        }
+
+        attract(thing) {
+          let force = p5.Vector.sub(this.position, thing.position);
+
+          let distance = force.mag();
+          distance = constrain(distance, 5, 25);
+
+          let strength = (G * this.mass * thing.mass) / (distance * distance);
+          force.setMag(strength);
+          return force;
+        }
+
+        show() {
+          stroke(0);
+          strokeWeight(1);
+          fill(175, 200);
+          circle(this.position.x, this.position.y, this.mass * 2);
+        }
+      }
+
       class ParticleSystem {
         constructor(lifespanPredicate, agingRatePredicate) {
           this.emitters = [];
@@ -59,7 +86,11 @@ Modified to refactor stuff I didn't like and add abstractions I thought would be
           ));
         }
         
-        applyForce(/**/) { /**/ }
+        applyForce(forceFunc) {
+          for (const emitter of this.emitters) {
+            emitter.applyForce(forceFunc);
+          }
+        }
       }
 
       class Emitter {
@@ -68,15 +99,6 @@ Modified to refactor stuff I didn't like and add abstractions I thought would be
           this.particles = [];
           this.lifespanPredicate = lifespanPredicate;
           this.agingRatePredicate = agingRatePredicate;
-        }
-
-        addParticle() {
-          this.particles.push(new Particle(
-            this.origin.x,
-            this.origin.y,
-            this.lifespanPredicate(),
-            this.agingRatePredicate(),
-          ));
         }
 
         step() {
@@ -91,6 +113,20 @@ Modified to refactor stuff I didn't like and add abstractions I thought would be
           });
         }
 
+        addParticle() {
+          this.particles.push(new Particle(
+            this.origin.x,
+            this.origin.y,
+            this.lifespanPredicate(),
+            this.agingRatePredicate(),
+          ));
+        }
+
+        applyForce(forceFunc) {
+          for (const particle of this.particles) {
+            particle.applyForce(forceFunc);
+          }
+        }
       }
 
       class Particle {
@@ -98,8 +134,10 @@ Modified to refactor stuff I didn't like and add abstractions I thought would be
           this.position = createVector(x, y);
           this.acceleration = createVector(0, 0);
           this.velocity = createVector(random(-1, 1), random(-1, 0));
+          this.mass = 1;
           this.lifespan = lifespan;
           this.agingRate = agingRate;
+          this.hue = random(0, 255);
         }
 
         isDead() {
@@ -107,43 +145,55 @@ Modified to refactor stuff I didn't like and add abstractions I thought would be
         }
 
         step() {
-          let gravity = createVector(0, 0.05);
-          this.applyForce(gravity);
-          this.update();
-          this.show();
-        }
-
-        applyForce(force) {
-          this.acceleration.add(force);
-        }
-
-        update() {
           this.velocity.add(this.acceleration);
           this.position.add(this.velocity);
           this.lifespan -= this.agingRate;
           this.acceleration.mult(0);
+
+          this.show();
+        }
+
+        applyForce(forceFunc) {
+          const forceVector = forceFunc(this);
+          this.acceleration.add(forceVector);
         }
 
         show() {
-          stroke(0, this.lifespan);
-          strokeWeight(2);
-          fill(127, this.lifespan);
+          strokeWeight(0);
+          fill(
+            this.hue,
+            100,
+            map(this.lifespan, 0, 255, 100, 50, true),
+          );
           circle(this.position.x, this.position.y, 8);
         }
       }
 
       let particleSystem;
+      let attractor;
 
       function setup() {
         createCanvas(1280, 480);
+        colorMode(HSL); // for rainbow particles!
+
+        attractor = new Attractor();
         particleSystem = new ParticleSystem(
           () => 255,
-          () => random(1,3),
+          () => 1,
+          // () => random(1,3),
         );
       }
 
       function draw() {
         background(255);
+        attractor.show();
+
+        // const gravity = createVector(0, 0.05);
+        // particleSystem.applyForce((particle) => gravity);
+        particleSystem.applyForce((particle) => attractor.attract(particle));
+
+        // Refactor how particles handle forces? Have them remember forces so we don't have to loop over and apply each time?
+
         particleSystem.step();
       }
 
