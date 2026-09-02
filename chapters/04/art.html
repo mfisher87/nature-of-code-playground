@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+
+<!--
+The Nature of Code
+Daniel Shiffman
+http://natureofcode.com
+
+Modified to refactor stuff I didn't like and add abstractions I thought would be fun!
+
+* Call it a ParticleSystem, not an Emitter: An emitter shouldn't be responsible
+  for cleaning up dead particles. Maybe this is a common pattern in existing
+  systems, but IMO we shouldn't call it an "emitter" if it does more than "emit".
+* .run() methods -> .step(): More explicit about what they do and how they
+  should be called
+* ParticleSystem.step() is now responsible for creating new particles: Feels
+  like this shouldn't be a global scope concern. Perhaps at the global scope we
+  could pass a function as an argument to the ParticleSystem constructor which
+  determines whether a particle should be created for a given step.
+* Enable lifespan and aging rate to be controlled by functions passed in as
+  args to the particle system
+* Replace backwards loop with a filter with side effects: My maintainer brain
+  doesn't like the backwards loop because someone unfamiliar with the code could
+  change it to forwards without understanding the consequences. Solvable with a
+  comment but... who reads? A filter with side effects seems least awful of
+  these choices.
+--> 
+
+<html lang="en">
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.8.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.8.0/addons/p5.sound.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta charset="utf-8" />
+    <title>Chapter 4 - Art!</title>
+  </head>
+  <body>
+    <main></main>
+
+    <script>
+      class ParticleSystem {
+        constructor(lifespanPredicate, agingRatePredicate) {
+          this.emitters = [];
+          this.lifespanPredicate = lifespanPredicate;
+          this.agingRatePredicate = agingRatePredicate;
+        }
+
+        step () {
+          for (const emitter of this.emitters) {
+            emitter.step();
+          }
+        }
+
+        addEmitter(x, y) {
+          this.emitters.push(new Emitter(
+            x,
+            y,
+            this.lifespanPredicate,
+            this.agingRatePredicate,
+          ));
+        }
+        
+        applyForce(/**/) { /**/ }
+      }
+
+      class Emitter {
+        constructor(x, y, lifespanPredicate, agingRatePredicate) {
+          this.origin = createVector(x, y);
+          this.particles = [];
+          this.lifespanPredicate = lifespanPredicate;
+          this.agingRatePredicate = agingRatePredicate;
+        }
+
+        addParticle() {
+          this.particles.push(new Particle(
+            this.origin.x,
+            this.origin.y,
+            this.lifespanPredicate(),
+            this.agingRatePredicate(),
+          ));
+        }
+
+        step() {
+          this.addParticle();
+          this.particles = this.particles.filter((particle) => {
+            if (particle.isDead()) {
+              return false;
+            } else {
+              particle.step();
+              return true;
+            }
+          });
+        }
+
+      }
+
+      class Particle {
+        constructor(x, y, lifespan, agingRate) {
+          this.position = createVector(x, y);
+          this.acceleration = createVector(0, 0);
+          this.velocity = createVector(random(-1, 1), random(-1, 0));
+          this.lifespan = lifespan;
+          this.agingRate = agingRate;
+        }
+
+        isDead() {
+          return this.lifespan < 0.0;
+        }
+
+        step() {
+          let gravity = createVector(0, 0.05);
+          this.applyForce(gravity);
+          this.update();
+          this.show();
+        }
+
+        applyForce(force) {
+          this.acceleration.add(force);
+        }
+
+        update() {
+          this.velocity.add(this.acceleration);
+          this.position.add(this.velocity);
+          this.lifespan -= this.agingRate;
+          this.acceleration.mult(0);
+        }
+
+        show() {
+          stroke(0, this.lifespan);
+          strokeWeight(2);
+          fill(127, this.lifespan);
+          circle(this.position.x, this.position.y, 8);
+        }
+      }
+
+      let particleSystem;
+
+      function setup() {
+        createCanvas(1280, 480);
+        particleSystem = new ParticleSystem(
+          () => 255,
+          () => random(1,3),
+        );
+      }
+
+      function draw() {
+        background(255);
+        particleSystem.step();
+      }
+
+      function mousePressed() {
+        particleSystem.addEmitter(mouseX, mouseY);
+      }
+    </script>
+
+  </body>
+</html>
