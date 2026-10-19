@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+
+<!--
+Inspired by:
+
+The Nature of Code
+Daniel Shiffman
+http://natureofcode.com
+--> 
+
+<html lang="en">
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/addons/p5.sound.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.19.0/matter.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta charset="utf-8" />
+    <title>Chapter 6 - Physics libraries - Example 1</title>
+  </head>
+  <body>
+    <main></main>
+
+    <script>
+
+      function setup() {
+        let canvas = createCanvas(1280, 480);
+        let engine = Matter.Engine.create({gravity: {x: 0, y: 1}});
+        let render = Matter.Render.create({
+          canvas: canvas.elt,
+          engine: engine,
+          options: {width: width, height: height},
+        });
+        Matter.Render.run(render);
+
+        let box = Matter.Bodies.rectangle(100, 100, 50, 50, {friction: 0.5, restitution: 0.75});
+        Matter.Body.setVelocity(box, Matter.Vector.create(10, 0));
+        Matter.Body.setAngularVelocity(box, 0.1);
+        Matter.Composite.add(engine.world, box);
+
+        let ground = Matter.Bodies.rectangle(
+          width / 2,
+          height - 5,
+          width,
+          10,
+          {isStatic: true},
+        );
+
+        Matter.Composite.add(engine.world, ground);
+
+        let runner = Matter.Runner.create();
+        Matter.Runner.run(runner, engine);
+      }
+    </script>
+
+  </body>
+</html>
